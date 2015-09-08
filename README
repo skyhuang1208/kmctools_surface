@@ -1,0 +1,19 @@
+1. adding type= 4 ltc type: vacuum
+
+2. adding an is_srf on the last of an type= -1 or 1
+
+format:
+vacuum: type x y z
+atom: type x y z is_srf
+vcc: type x y z ix iy iz
+itl: type x y z ix iy iz dir head
+
+1048576
+T: 500000 1.204
+4 0 0 0
+1 0 0 1 1
+-1 0 0 2 0
+-2 0 0 3 0 0 1 3 -1
+3 0 0 4 0 2 0 5 -1
+0 0 0 5 1 0 1
+...
