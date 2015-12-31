@@ -20,9 +20,9 @@ void error(int nexit, string errinfo, int nnum=0, double num1=0, double num2=0){
 }
 
 // parameters //
-const int nx= 276;
-const int ny= 64;
-const int nz= 64;
+const int nx= 660;
+const int ny= 270;
+const int nz=   4;
 
 int Ttype= -1;
 // parameters //
@@ -57,9 +57,12 @@ int main(int nArg, char *Arg[]){
 	// READING FILES
 	
 	// OPEN OUTPUT FILES 
-	char name[50]="out.", s_ts[50]; 
-	sprintf(s_ts, "%lld", timestep);
+	char name[50]="out.", s_ts[50], s_time[50]; 
+	sprintf(s_ts,   "%lld", timestep);
+	sprintf(s_time, "%.2e", realtime);
 	strcat(name, s_ts);
+	strcat(name, "_");
+	strcat(name, s_time);
 	
 	out_den= fopen(name, "w");
 	if(NULL==out_den) error(1, "out_den was not open");
@@ -117,7 +120,7 @@ void cal_den(){
 	if(N_check != N_Ttype) error(2, "N Ttype inconsistent", N_check, N_Ttype);
 	cout << "number of targeted type: " << N_Ttype << endl;
 
-	double dis= 0.5*sqrt(3);
+	double dis= 0.5*sqrt(2);
 	fprintf(out_den, "%f %f %lld %e\n", -(nx/2.0)*dis, den[0]*1.0/ny/nz, timestep, realtime);
 	for(int i=1; i<nx; i ++) fprintf(out_den, "%f %f\n", (i-nx/2.0)*dis, den[i]*1.0/ny/nz);
 }

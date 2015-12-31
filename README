@@ -1,5 +1,5 @@
+This tools are for srf simulations with the following features:
 1. adding type= 4 ltc type: vacuum
-
 2. adding an is_srf on the last of an type= -1 or 1
 
 format:

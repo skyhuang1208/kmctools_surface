@@ -43,7 +43,8 @@ def writeltcp(timestep_, time_):
 
     print(N_atoms, file=LTC); print("T:", timestep_, time_, file=LTC);
     for s, a, b, c in zip(states, x, y, z):
-        if (s == 1) or (s == -1): print(s, a, b, c, file=LTC)
+        if s == 4               : print(s, a, b, c, file=LTC)
+        if (s == 1) or (s == -1): print(s, a, b, c, "0", file=LTC)
         elif s == 0:              print(s, a, b, c, "0 0 0", file=LTC)
         else:                     print(s, a, b, c, "0 0 0 0 0", file=LTC)
 
