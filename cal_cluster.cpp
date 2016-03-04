@@ -65,15 +65,24 @@ const int nx= 100;
 const int ny= 100;
 const int nz= 100;
 
-const int sample_cltr=		1e5; 
-const int cycle_out_csind=	1e7;
+// switchers of calculations
+const bool is_cltr= true; // cszie, csave, csind
+const bool is_msd=  true;
+const bool is_lce=  true;
+const bool is_sro=  true;
+const bool is_lro=  true;
+const bool read_vcc= true;
 
-const int sample_sro=		1e5;
-const int sample_lro=		1e5;
-const int sample_msd=		1e5;
-
-const int sample_lce=		1e5;
-const int cycle_lce=		1e7; // MC steps that the period of the lce calculations (output an point of lce)
+// calculation periods
+const int sample_cltr=		1e6; 
+const int cycle_out_csind=	1e8;
+//
+const int sample_sro=		1e6;
+const int sample_lro=		1e6;
+const int sample_msd=		1e6;
+//
+const int sample_lce=		1e6;
+const int cycle_lce=		1e8; // MC steps that the period of the lce calculations (output an point of lce)
 
 const int Ttype= -1; // targeted type: solute atom
 const int itype_sro= -1;
@@ -186,9 +195,10 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 	string line2; getline(in_ltcp, line2);
 
 	for(int a=0; a<ntotal; a ++){
-		int state_in, i, j, k, ix, iy, iz;
+		int state_in, i, j, k, ix, iy, iz, srf;
 		in_ltcp >> state_in >> i >> j >> k;
-		if(state_in != 1 && state_in != -1) in_ltcp >> ix >> iy >> iz; 
+		if(state_in == 1 || state_in == -1) in_ltcp >> srf;
+        else                                in_ltcp >> ix >> iy >> iz; 
 		
 		if(in_ltcp.eof()) error(1, "reach end of file before finish reading all data");
 		if(state_in > MAX_TYPE) error(1, "(in_t0) state input is larger than MAX_TYPE", 1, state_in); // check
@@ -215,11 +225,11 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 			vltcp.push_back(a);
 		}
 
-		update_cid(x, y, z, is_updated);
+		if(is_cltr) update_cid(x, y, z, is_updated); // cltr
 	}
 	if(vcheck !=1) cout << "WARNING!!! NV != 1, msd is not calculated correctly !!!" << endl;
 
-	sum_csize();
+	if(is_cltr) sum_csize(); // cltr
 }
 
 void read_his_vcc(ifstream &in_vcc, vector <int> & i_will){ // Reading history.vcc
@@ -279,11 +289,11 @@ void read_his_cal(){ // Reading history.sol and calculating /////////
 			i_will.push_back(sltcp);
 		}
 
-		read_his_vcc(in_vcc, i_will);
+		if(read_vcc) read_his_vcc(in_vcc, i_will); // vcc
 		// READING and UPDATE STATES ARRAY
 
 		// UPDATE CLUSTER ID
-		if(0==timestep%sample_cltr){
+		if(is_cltr && 0==timestep%sample_cltr){ // cltr
 			id_cltr.fill(0); cid= 0;
 			bool is_updated[nx*ny*nz]= {false};
 			for(int a=0; a<i_will.size(); a++){
@@ -308,10 +318,10 @@ void read_his_cal(){ // Reading history.sol and calculating /////////
 		// UPDATE CLUSTER ID
 
 		// PROPERTIES CALCULATIONS
-		if(0==timestep%sample_msd)  cal_msd();
-		if(0==timestep%sample_sro)  cal_sro();
-		if(0==timestep%sample_lro)  cal_lro();
-		if(0==timestep%sample_lce)  cal_lce();
+		if(is_msd && 0==timestep%sample_msd)  cal_msd();
+		if(is_sro && 0==timestep%sample_sro)  cal_sro();
+		if(is_lro && 0==timestep%sample_lro)  cal_lro();
+		if(is_lce && 0==timestep%sample_lce)  cal_lce();
 		// PROPERTIES CALCULATIONS
 
 		if(0==timestep%100000) cout << "T: " << timestep << " " << realtime << endl;
