@@ -30,7 +30,7 @@ while (my $buff=<IN>){
 
 	my ($type, $xi, $yi, $zi) = split(/\s+/, $buff);
 
-	if($type != 1){
+	if($type == -1){
 		$n ++;
 		$data[$n][0]= $type;
 		$data[$n][1]= $xi;
@@ -38,8 +38,20 @@ while (my $buff=<IN>){
 		$data[$n][3]= $zi;
 	}
 }
-
+$n ++;
 print "$n\n\n";
-for(my $i= 1; $i<= $n; $i ++){
-	print "$data[$i][0] $data[$i][1] $data[$i][2] $data[$i][3]\n";
+for(my $i= 1; $i<= $n-1; $i ++){
+	my $el;
+
+	if(-1==$data[$i][0]){
+		$el= 'B';
+	}
+	elsif(0==$data[$i][0]){
+		$el= 'V';
+	}
+	else{
+		die("strange element $data[$i][0]\n");
+	}
+	print "B $data[$i][1] $data[$i][2] $data[$i][3]\n";
 }
+print "V -1 -1 -1\n";

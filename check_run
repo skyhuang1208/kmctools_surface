@@ -1,0 +1,20 @@
+#!/bin/bash
+
+init_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+for vcc in vcc01 vcc05 vcc10 vcc20
+do
+    for sol in sol01 sol02 sol05 sol10 sol15 sol20
+    do
+        for temp in 0300k 0600k 0800k 1000k 1200k
+        do
+            ./check.py $vcc/$sol/$temp/kmc_par.h
+            echo "in $vcc, $sol, $temp (y/n)"
+            read yorn
+            if [ $yorn != "y" ]; then
+                echo "terminating the program ..."
+                exit 1
+            fi
+        done
+    done
+done
