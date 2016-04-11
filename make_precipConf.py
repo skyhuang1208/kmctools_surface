@@ -6,15 +6,15 @@
 import sys
 import numpy
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
     print("Make a totally aggregate .sol file")
-    exit("Usage: %s nx conc_B r0 dr" % sys.argv[0])
+    exit("Usage: %s nx conc_B conc_V r0 dr" % sys.argv[0])
 
 ### parameters ###
-nx= sys.argv[1]
-nb= sys.argv[2]*nx*nx*nx
-r0= sys.argv[3]
-dr= sys.argv[4]
+nx= int(sys.argv[1])
+nb= (1-float(sys.argv[3]))*float(sys.argv[2])*nx*nx*nx
+r0= float(sys.argv[4])
+dr= float(sys.argv[5])
 ### parameters ###
 
 def cal_dis(da, db, dc):
@@ -31,21 +31,22 @@ def cal_dis(da, db, dc):
     return numpy.sqrt(dx*dx + dy*dy + dz*dz)
 
 i_range= 0
+n=0
 while n<nb:
     r= r0 + i_range*dr
     n=0
-    states[i][j][k]= [[[0 for k in range(nx)] for j in range(nx)] for i in range(nx)]
+    states= [[[0 for k in range(nx)] for j in range(nx)] for i in range(nx)]
     for i in range(nx):
         for j in range(nx):
             for k in range(nx):
                 if cal_dis(i-nx/2, j-nx/2, k-nx/2) <= r:
                     n += 1
                     states[i][j][k]= -1
-    if i_range==0 and n>nb: exit("use larger r0: (n nb)", n, nb)
-    print("time", i_range, ": n=", n, ", nb=", nb, ", pct=", float(n)/nb)
+    if i_range==0 and n>nb: exit("use smaller r0: (n nb) %d %d" % (n, nb))
+    print("time", i_range, ": r=", r, ", n=", n, ", nb=", nb, ", pct=", float(n)/nb)
     i_range += 1
 
-with open("temp.sol", "r") as OFILE:
+with open("temp.sol", "w") as OFILE:
     print(n, file= OFILE)
     print("T: 1 1", file= OFILE)
     for i in range(nx):

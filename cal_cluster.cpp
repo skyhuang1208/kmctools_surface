@@ -54,19 +54,19 @@ int pbc(int x_, int nx_){ // Periodic Boundary Condition
 
 // parameters //
 #define MAX_TYPE 2
-#define DEF_CLTR 4 // The definition of minimum number of ltcps for a cluster
+//#define CONST_CLTR 0 // The definition of minimum number of ltcps for a cluster
 const double vbra[3][3]= {{-0.5,  0.5,  0.5}, { 0.5, -0.5,  0.5}, { 0.5,  0.5, -0.5}};
 const int n1nbr= 8;
 const int v1nbr[8][3]= {{ 1,  0,  0}, { 0,  1,  0}, { 0,  0,  1},
 			{-1,  0,  0}, { 0, -1,  0}, { 0,  0, -1},
 			{ 1,  1,  1}, {-1, -1, -1}	       };
 
-const int nx= 100;
-const int ny= 100;
-const int nz= 100;
+const int nx=  64;
+const int ny=  64;
+const int nz=  64;
 
 // switchers of calculations
-const bool is_cltr= true; // cszie, csave, csind
+const bool is_cltr=  true; // cszie, csave, csind
 const bool is_msd=  true;
 const bool is_lce=  true;
 const bool is_sro=  true;
@@ -74,15 +74,15 @@ const bool is_lro=  true;
 const bool read_vcc= true;
 
 // calculation periods
-const int sample_cltr=		1e6; 
-const int cycle_out_csind=	1e8;
+const int sample_cltr=		1e0; 
+const int cycle_out_csind=	1e0;
 //
-const int sample_sro=		1e6;
-const int sample_lro=		1e6;
-const int sample_msd=		1e6;
+const int sample_sro=		1e0;
+const int sample_lro=		1e0;
+const int sample_msd=		1e0;
 //
-const int sample_lce=		1e6;
-const int cycle_lce=		1e8; // MC steps that the period of the lce calculations (output an point of lce)
+const int sample_lce=		1e3;
+const int cycle_lce=		1e4; // MC steps that the period of the lce calculations (output an point of lce)
 
 const int Ttype= -1; // targeted type: solute atom
 const int itype_sro= -1;
@@ -90,6 +90,7 @@ const int jtype_sro= 1;
 // parameters //
 
 // global variables
+int def_cltr; // the threshold of size to count as cltr
 double realtime= 0; // real time in the simulation (unit: s) 
 long long int timestep= 0;
 
@@ -123,8 +124,9 @@ void read_his_vcc(ifstream &in_vcc, vector <int> & i_will);
 void read_his_cal(); // read his_sol and calculate
 // Calculations
 void update_cid(int x, int y, int z, bool is_updated[]); // input one ltc point and renew cluster id around it
-void sum_csize();
+int  sum_csize(bool isdef= false);
 void write_csind(vector <int> N_in_cltr);
+int  cal_thshold();
 void cal_msd();
 void cal_lce();
 void cal_sro();
@@ -194,6 +196,7 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 	
 	string line2; getline(in_ltcp, line2);
 
+    int states_temp[ntotal];
 	for(int a=0; a<ntotal; a ++){
 		int state_in, i, j, k, ix, iy, iz, srf;
 		in_ltcp >> state_in >> i >> j >> k;
@@ -203,15 +206,25 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 		if(in_ltcp.eof()) error(1, "reach end of file before finish reading all data");
 		if(state_in > MAX_TYPE) error(1, "(in_t0) state input is larger than MAX_TYPE", 1, state_in); // check
 		if(a != i*ny*nz+j*nz+k) error(1, "in_t0: ltcp inconsistent", 2, a, i*ny*nz+j*nz+k); // check
-		states[a]= state_in;
+		states_temp[a]= state_in;
 
 		if(state_in==Ttype) ntt ++;
 	}
 	in_ltcp.close();
 	cout << "t0.ltcp file reading completed; ntt= " << ntt << endl;
 
+#ifdef CONST_CLTR
+    def_cltr= CONST_CLTR;
+    cout << "cluster threshold: (constant): " << def_cltr << endl;
+#else
+    def_cltr= cal_thshold();
+    cout << "cluster threshold: (from random): " << def_cltr << endl;
+#endif
+
 	// identify clusters and give them ids at t0
-	int vcheck= 0;
+	for(int a=0; a<ntotal; a ++) states[a]= states_temp[a];
+
+    int vcheck= 0;
 	bool is_updated[nx*ny*nz]= {false};
 	for(int a=0; a<ntotal; a ++){
 		int x= (int) (a/nz)/ny;
@@ -230,6 +243,32 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 	if(vcheck !=1) cout << "WARNING!!! NV != 1, msd is not calculated correctly !!!" << endl;
 
 	if(is_cltr) sum_csize(); // cltr
+}
+    
+int cal_thshold(){
+    int thshold=0;
+	srand(time(NULL));
+    for(int i=0; i<10; i ++){
+        states.fill(100);
+        for(int j=0; j<ntt; j ++){
+            int ltcp;
+            do{
+	            ltcp= rand()%(nx*ny*nz);
+            } while(states[ltcp]==Ttype);
+            states[ltcp]=Ttype;
+        }
+        
+        bool is_updated[nx*ny*nz]= {false};
+        for(int a=0; a<nx*ny*nz; a ++){
+		    int x= (int) (a/nz)/ny;
+		    int y= (int) (a/nz)%ny;
+		    int z= (int)  a%nz;
+		    update_cid(x, y, z, is_updated); // cltr
+        }
+        thshold += sum_csize(true);
+    }
+
+    return thshold/10;
 }
 
 void read_his_vcc(ifstream &in_vcc, vector <int> & i_will){ // Reading history.vcc
@@ -368,8 +407,8 @@ void update_cid(int x, int y, int z, bool is_updated[]){
 skip_update:;
 }
 
-void sum_csize(){
-	int Ncsize[5]= {0}; // # of clusters for single, l>1, l>5, l>10, l>30
+int sum_csize(bool isdef){
+	int Ncsize[1000]= {0}; // # of clusters for single, l>1, l>5, l>10, l>30
 	int Ncltr= 0;       // # of clusters, not atoms in clusters
 	int sumNincltr= 0;  // total number of Ttype in clusters 
 	double sumRadius= 0;// sum of radius of clusters
@@ -386,6 +425,19 @@ void sum_csize(){
 		}
 	}
 
+    if(isdef){
+	    for(int j=1; j<=cid; j ++){
+		    if(0==N_in_cltr[j]) continue;
+            Ncsize[N_in_cltr[j]] ++;
+		}
+#define TRSHOLD_PROB 0.9
+        int nacc= 0; // accumulate atoms
+        for(int i=1; i<1000; i++){
+            nacc += i*Ncsize[i];
+            if((double) nacc/ntt > TRSHOLD_PROB) return (i+1);
+        }
+    }
+
 	// calculated cluster related properties
 	write_csind(N_in_cltr);
 	// calculated cluster related properties
@@ -394,7 +446,7 @@ void sum_csize(){
 	for(int j=1; j<=cid; j ++){
 		if(0==N_in_cltr[j]) continue;
 
-		if(N_in_cltr[j] >= DEF_CLTR){ 
+		if(N_in_cltr[j] >= def_cltr){ 
 			Ncltr ++;
 			sumNincltr += N_in_cltr[j];
 			sumRadius  += pow((N_in_cltr[j]/N_UCELL)*(3.0/4.0/PI), (1.0/3.0));
@@ -420,6 +472,8 @@ void sum_csize(){
 	
 	fprintf(out_csize, "%lld %e %d %d %d %d %d\n", timestep, realtime, Ncsize[0], Ncsize[1], Ncsize[2], Ncsize[3], Ncsize[4]);
 	fprintf(out_csave, "%lld %e %d %f %f\n", timestep, realtime, Ncltr, Nave, Rave);
+
+    return 0;
 }
 	
 void write_csind(vector <int> N_in_cltr){

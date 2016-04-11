@@ -15,25 +15,25 @@ if (len(sys.argv) != 7):
     exit("use: cal_phase.py [IN_SRO] [OUT_sep] [OUT_ord] [OUT_ran] sol% temp\n")
 
 # PARAMETERS
-upper=  0.15 
-lower= -0.15
+upper=  0.002 
+lower= -0.002
 # PARAMETERS
 
 x_last=0 # last value of SRO
 with open(sys.argv[1], "r") as IFILE: # start reading and change parameters
     for line in IFILE:
         (step, t, sro)= line.strip().split()
-        x_last= sro
+        x_last= float(sro)
 
 name_out= str()
-if   x_last >= upper:
+if   x_last > upper:
     name_out= sys.argv[2]
-elif x_last <= lower:
+elif x_last < lower:
     name_out= sys.argv[3]
 else:
     name_out= sys.argv[4]
 
-OFILE= open("TEMP_"+sys.argv[1], "a") # open output file
+OFILE= open(name_out, "a") # open output file
 print(sys.argv[5], sys.argv[6], file=OFILE)
 
-print("*** Calculation completed! ***")
+print("*** Calculate:", sys.argv[5], sys.argv[6], "to", name_out, "(", x_last, ")", " ***")

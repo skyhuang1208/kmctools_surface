@@ -122,10 +122,13 @@ int main( int argc, char *argv[] )
     for( i = 0; i < nb; ++i )
     {
       fgets( buffer, 1000, in);
-      sscanf( buffer, "%c %d %d %d %*d %*d\n", &el, &a, &b, &c );
-//      if( el == 'B' )
-//      {
+      sscanf( buffer, "%c %d %d %d\n", &el, &a, &b, &c );
+      if( el == 'B' )
+      {
         // project from realspace back into fcc-basis coordinates
+	  x[0]= a;
+	  x[1]= b;
+	  x[2]= c;
 //        x[0] = ( b + c - a ) / 2;
 //        x[1] = ( c + a - b ) / 2;
 //        x[2] = ( a + b - c ) / 2;
@@ -137,7 +140,7 @@ int main( int argc, char *argv[] )
           }
         }
         f3dmap[x[0]+ss*(x[1]+ss*x[2])][0] = 1.0-cb;
-//      }
+      }
     }
 
     #ifdef DUMPXYZ

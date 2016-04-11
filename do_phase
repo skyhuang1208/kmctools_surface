@@ -1,0 +1,9 @@
+init_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+for dir2 in 01 02 05 10 15 20
+do
+    for dir3 in 0300 0600 0800 1000 1200
+    do
+        ./cal_phase.py sol$dir2/$dir3"k"/out.sro phase_sep phase_ord phase_ran $dir2 $dir3  
+    done
+done
