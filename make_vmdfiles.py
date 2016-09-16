@@ -26,7 +26,8 @@ def writedata(timestep_, time_):
     print(N_vac, file=VAC);             print("time:", timestep_, time_, file=VAC);
     print(len(defect)-N_vac, file=ITL); print("time:", timestep_, time_, file=ITL);
     for tp, ltcp in defect:
-        if tp == 0: print("0", x[ltcp], y[ltcp], z[ltcp], file=VAC)
+        if tp == 0:   print("0", x[ltcp], y[ltcp], z[ltcp], file=VAC)
+        elif tp == 5: print("5", x[ltcp], y[ltcp], z[ltcp], file=VAC)
         else:       print("2", x[ltcp], y[ltcp], z[ltcp], file=ITL)
     
     print(len(solute), file=A02);       print("time:", timestep_, time_, file=A02);
@@ -176,7 +177,7 @@ else:
             elif cal_status == 1: # output
                 for i in range(0, dnl):
                     (tp, ltcp, ix, iy, iz)= DEF.readline().split()
-                    if int(tp) == 0: N_vac += 1
+                    if int(tp) == 0 or int(tp) == 5: N_vac += 1
                     defect.append([int(tp), int(ltcp)])
                 for i in range(0, snl):
                     ltcp= int(SOL.readline())

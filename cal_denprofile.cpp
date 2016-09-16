@@ -20,11 +20,12 @@ void error(int nexit, string errinfo, int nnum=0, double num1=0, double num2=0){
 }
 
 // parameters //
-const int nx= 660;
-const int ny= 270;
-const int nz=   4;
+const int nx= 256;
+const int ny=  64;
+const int nz=  64;
 
-int Ttype= -1;
+int Ttype1= -1;
+int Ttype2=  3;
 // parameters //
 
 // global variables
@@ -52,17 +53,20 @@ int main(int nArg, char *Arg[]){
 	cout << "The system size is " << nx << " x " << ny << " x " << nz << endl;
 
 	// READING FILES
-	if(nArg != 2) error(0, "nArg must be 2\nUse den.exe <.xyz>\n");
+	if(nArg != 2 && nArg != 3) error(0, "nArg must be 2 or 3\nUse den.exe <.xyz> <out>\n");
 	read_xyz(Arg[1]);
 	// READING FILES
 	
 	// OPEN OUTPUT FILES 
 	char name[50]="out.", s_ts[50], s_time[50]; 
-	sprintf(s_ts,   "%lld", timestep);
-	sprintf(s_time, "%.2e", realtime);
-	strcat(name, s_ts);
-	strcat(name, "_");
-	strcat(name, s_time);
+	if(nArg==3) strcpy(name, Arg[2]);
+    else{
+        sprintf(s_ts,   "%lld", timestep);
+	    sprintf(s_time, "%.2e", realtime);
+	    strcat(name, s_ts);
+	    strcat(name, "_");
+	    strcat(name, s_time);
+    }
 	
 	out_den= fopen(name, "w");
 	if(NULL==out_den) error(1, "out_den was not open");
@@ -99,7 +103,7 @@ void read_xyz(char ifname[]){ // Reading .ltcp ////////////////////
 		if(state_in == 2 || state_in == -2 || state_in == 3) in_t0 >> dir >> head;
 
 		states[x][y][z]= state_in;
-		if(Ttype==state_in) N_check ++;
+		if(Ttype1==state_in || Ttype2==state_in) N_check ++;
 	}
 	in_t0.close();
 	cout << "t0.xyz file reading completed" << endl;
@@ -111,7 +115,7 @@ void cal_den(){
 	for(int i=0; i<nx; i ++){
 		for(int j=0; j<ny; j ++){
 			for(int k=0; k<nz; k ++){
-				if(Ttype==states[i][j][k]){
+				if(Ttype1==states[i][j][k] || Ttype2==states[i][j][k]){
 					N_Ttype ++;
 					den[i] ++;
 				}
