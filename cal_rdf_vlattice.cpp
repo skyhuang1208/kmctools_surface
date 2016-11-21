@@ -22,18 +22,15 @@ void error(int nexit, string errinfo, int nnum=0, double num1=0, double num2=0){
 
 // parameters //
 #define PI 3.14159265358979323846
-#define SUB 0.0000000001 // a small number to avoid error
 const double vbra[3][3]= {{-0.5,  0.5,  0.5}, { 0.5, -0.5,  0.5}, { 0.5,  0.5, -0.5}};
 const double sigma= 0.05; // standard deviation of the gaussian function: vibration distance 
-const int  N_totbox= 8; // total boxes
-const double r0= 0.1 - SUB; // smallest sphere radius of rdf
 
-double dr= 0.01; 
-double r_trunc= 10;
+double r0= 0.1;
+double dr= 0.5;
+double r_trunc= 64;
 int nr; 
 
 int type_A= 6;
-int type_B= 6;
 
 const int nx= 128;
 const int ny= 128;
@@ -42,25 +39,18 @@ const int nz= 128;
 
 // global variables
 int nall;
-int states[nx][ny][nz];
-vector < vector<int> > xlist;
-vector < vector<int> > ylist;
-vector < vector<int> > zlist;
-vector < vector<double> > glist;
-vector < vector<int> > Alist(3);
+vector < vector<double> > Alist(3);
 
 FILE * out;
-FILE * out_nor;
 char name_in_t0[20];
 // global variables
 
 //######################### functions #########################//
 double cal_rho();
 void read_t0();
-void make_cal_lists();
 void cal_rdf(double rho);
 // Sub-functions for making cal lists
-void cal_dis(double dis[], int a2, int b2, int c2);
+double cal_dis(int dx, int dy, int dz);
 double gaussian(double x_);
 // Sub-function for cal rdf
 int pbc(int x_, int nx_);
@@ -81,32 +71,19 @@ int main(int nArg, char *Arg[]){
 	}
 	strcpy(name_in_t0, Arg[1]);
 	cout << "\nImported parameters:" << endl << "dr= " << dr << ", truncation radius= " << r_trunc << endl;
-	cout << "Atom type A is: " << type_A << ", and type B is: " << type_B << endl;
+	cout << "Atom type is: " << type_A << endl;
 
 	// CAL PARAMETERS
 	nr= r_trunc/dr + 10; // much larger than actually need 
 	cout << "\nCalculated parameters: " << endl << "nr= " << nr << endl;
 
-	// INITIALIZE VECTOR ARRAYS
-	for(int i=0; i<nr; i ++){
-		xlist.push_back(vector<int>());
-		ylist.push_back(vector<int>());
-		zlist.push_back(vector<int>());
-		glist.push_back(vector<double>());
-	}
-
 	// OPEN OUTPUT FILES  
-	char name[13]  = "out_nonn.rdf";
-	out= fopen(name, "w");
-	if(NULL==out) error(1, "out file was not open");
-
 	char name_nor[20];
 	strcpy(name_nor, Arg[2]);
-	out_nor= fopen(name_nor, "w");
-	if(NULL==out_nor) error(1, "nor out file was not open");
+	out= fopen(name_nor, "w");
+	if(NULL==out) error(1, "nor out file was not open");
 	
 	// CALCULATIONS
-	make_cal_lists();
 	read_t0();
 	double rho= cal_rho(); cout << "Density is: " << rho << endl;
 	cal_rdf(rho);
@@ -127,59 +104,28 @@ double cal_rho(){ // calculate the density of the whole system
 	return nall / (v1[0]*cross[0] + v1[1]*cross[1] + v1[2]*cross[2]);
 }
 
-void make_cal_lists(){
-	cout << "\nNow making calculation list..." << endl;
+double cal_dis(int dx, int dy, int dz){ // index pbc distance from the point (0, 0, 0)
+	double dis= 9999999;
+    for(int a=-1; a<=1; a++){
+		for(int b=-1; b<=1; b++){
+			for(int c=-1; c<=1; c++){
+				int da= dx + a*nx;
+				int db= dy + b*ny;
+				int dc= dz + c*nz;
+				double dx2= da*vbra[0][0] + db*vbra[1][0] + dc*vbra[2][0];
+				double dy2= da*vbra[0][1] + db*vbra[1][1] + dc*vbra[2][1];
+				double dz2= da*vbra[0][2] + db*vbra[1][2] + dc*vbra[2][2];
 
-	int index= -1;
-	for(int i=0; i<nx; i ++){
-		cout << i << "/" << nx << endl;
-		for(int j=0; j<ny; j ++){
-			for(int k=0; k<nz; k ++){
-				double dis[N_totbox];
-				cal_dis(dis, i, j, k);
-
-				for(int a=0; a<N_totbox; a ++){
-					if(0==dis[a]) continue;
-					if(dis[a]>r_trunc+1) continue; // seems redundant; just simply use the system size as the truncation radius?
-
-					for(int b=0; b < nr; b++){
-						double r_shell= r0 + b*dr + 0.5*dr;
-						double gvalue= gaussian(dis[a]-r_shell);
-
-						if(gvalue != 0){
-							xlist[b].push_back(i);
-							ylist[b].push_back(j);
-							zlist[b].push_back(k);
-							glist[b].push_back(gvalue);
-						}
-					}
-				}
+				double d= sqrt(dx2*dx2 + dy2*dy2 + dz2*dz2);
+                if(d<dis) dis= d;
 	}}}
 
-	cout << "\nList making completed!!" << endl;
-}
-
-void cal_dis(double dis[], int a2, int b2, int c2){ // index pbc distance from the point (0, 0, 0)
-	int index= -1;
-	for(int a=-1; a<=0; a++){
-		for(int b=-1; b<=0; b++){
-			for(int c=-1; c<=0; c++){
-				index ++;
-				
-				int a2i= a2 + a*nx;
-				int b2i= b2 + b*ny;
-				int c2i= c2 + c*nz;
-				double dx= (0-a2i)*vbra[0][0] + (0-b2i)*vbra[1][0] + (0-c2i)*vbra[2][0];
-				double dy= (0-a2i)*vbra[0][1] + (0-b2i)*vbra[1][1] + (0-c2i)*vbra[2][1];
-				double dz= (0-a2i)*vbra[0][2] + (0-b2i)*vbra[1][2] + (0-c2i)*vbra[2][2];
-
-				dis[index]= sqrt(dx*dx + dy*dy + dz*dz);
-	}}}
+    return dis;
 }
 
 double gaussian(double x_){
 	if(abs(x_) > 3*sigma)	return 0;
-	else 			return dr * ( exp(-x_*x_/2/sigma/sigma) / sqrt(2*PI*sigma*sigma) );
+	else                    return dr * ( exp(-x_*x_/2/sigma/sigma) / sqrt(2*PI*sigma*sigma) );
 }
 
 void read_t0(){ // Reading t0.ltcp
@@ -193,20 +139,21 @@ void read_t0(){ // Reading t0.ltcp
 	
 	string line2; getline(in_t0, line2);
 
-    for(int a=0; a<nx*ny*nz; a++) *(&states[0][0][0]+a)= -6;
-
 	for(int a=0; a<nall; a ++){
 		if(in_t0.eof()) error(1, "reach end of file before finish reading all data");
 		
 		int state_in;
-		int i, j, k;
+		double i, j, k;
         int dump1, dump2, dump3, dump4, dump5;
 		in_t0 >> state_in >> i >> j >> k;
         if(1==state_in || -1==state_in) in_t0 >> dump1;
         if(0==state_in ||  5==state_in) in_t0 >> dump1 >> dump2 >> dump3;
         if(2==state_in ||  3==state_in || -2==state_in) in_t0 >> dump1 >> dump2 >> dump3 >> dump4 >> dump5;
 
-		states[i][j][k]= state_in;
+        if(i>(nx-1)) error(1, "point out of bound x", 1, i);
+        if(j>(ny-1)) error(1, "point out of bound y", 1, j);
+        if(k>(nz-1)) error(1, "point out of bound z", 1, k);
+
 		if(type_A==state_in){
 			Alist[0].push_back(i);
 			Alist[1].push_back(j);
@@ -222,31 +169,40 @@ void cal_rdf(double rho){
 
 	double sum[nr]; // sum of all ltcp included within a certain shell
 	for(int a=0; a < nr; a++) sum[a]= 0;
-	
-	for(int i=0; i<Alist[0].size(); i ++){
-		for(int a=0; a < nr; a++){
-			for(int b=0; b<xlist[a].size(); b ++){
-				int x2= pbc(Alist[0].at(i)+xlist[a].at(b), nx);
-				int y2= pbc(Alist[1].at(i)+ylist[a].at(b), ny);
-				int z2= pbc(Alist[2].at(i)+zlist[a].at(b), nz);
 
-				if(type_B==states[x2][y2][z2]) sum[a] += glist[a].at(b);
-			}
+	for(int i=0; i<Alist[0].size(); i ++){
+        double a= Alist[0].at(i);
+        double b= Alist[1].at(i);
+        double c= Alist[2].at(i);
+
+	    for(int j=0; j<Alist[0].size(); j ++){
+            double x= Alist[0].at(j);
+			double y= Alist[1].at(j);
+			double z= Alist[2].at(j);
+
+            double dis= cal_dis(x-a, y-b, z-c);
+            if(dis>r0 && dis<r_trunc){
+                int nshell= (int) (dis/dr); // center of the shell
+                for(int b= -3*sigma/dr-1; b<= 3*sigma/dr+1; b++){
+                    double r_shell= (nshell+b+0.5)*dr;
+			        double gvalue= gaussian(dis-r_shell);
+                    sum[nshell+b] += gvalue;
+                }
+            }
 		}
 		
 		if(0==i%1000) cout << i << "/" << Alist[0].size() << endl;
-	
 	}
 
 	cout << "\nRDF calculations completed!! Now output to the file..." << endl; 
 
 	for(int a=0; a < nr; a++){
-		double r_print= r0 + 0.5*dr + a*dr;
-		double r1= r0 + dr* a;
-		double r2= r0 + dr*(a+1);
+		double r_print= 0.5*dr + a*dr;
+		double r1= dr* a;
+		double r2= dr*(a+1);
 		double volume = 4*PI/3*(pow(r2,3) - pow(r1,3));
-		fprintf(out, "%f %f\n", r_print, sum[a] / Alist[0].size());
-		fprintf(out_nor, "%f %f\n", r_print, sum[a] / Alist[0].size() / volume / rho);
+
+        fprintf(out, "%f %f\n", r_print, sum[a] / Alist[0].size() / volume / rho);
 	}
 }
 

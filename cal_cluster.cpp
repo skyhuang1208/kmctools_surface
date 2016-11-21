@@ -54,7 +54,7 @@ int pbc(int x_, int nx_){ // Periodic Boundary Condition
 
 // parameters //
 #define MAX_TYPE 2
-//#define CONST_CLTR 0 // The definition of minimum number of ltcps for a cluster
+#define CONST_CLTR 3 // The definition of minimum number of ltcps for a cluster
 const double vbra[3][3]= {{-0.5,  0.5,  0.5}, { 0.5, -0.5,  0.5}, { 0.5,  0.5, -0.5}};
 const int n1nbr= 8;
 const int v1nbr[8][3]= {{ 1,  0,  0}, { 0,  1,  0}, { 0,  0,  1},
@@ -84,9 +84,9 @@ const int sample_msd=		1e0;
 const int sample_lce=		1e3;
 const int cycle_lce=		1e4; // MC steps that the period of the lce calculations (output an point of lce)
 
-const int Ttype= -1; // targeted type: solute atom
-const int itype_sro= -1;
-const int jtype_sro= 1;
+const int Ttype=-1; // targeted type: solute atom
+const int itype_sro=-1;
+const int jtype_sro=-1;
 // parameters //
 
 // global variables
@@ -123,7 +123,7 @@ void read_ltcp();
 void read_his_vcc(ifstream &in_vcc, vector <int> & i_will);
 void read_his_cal(); // read his_sol and calculate
 // Calculations
-void update_cid(int x, int y, int z, bool is_updated[]); // input one ltc point and renew cluster id around it
+void update_cid(int x, int y, int z, vector <bool> & is_updated); // input one ltc point and renew cluster id around it
 int  sum_csize(bool isdef= false);
 void write_csind(vector <int> N_in_cltr);
 int  cal_thshold();
@@ -177,7 +177,6 @@ int main(int nArg, char *Arg[]){
 	if(NULL==out_lro)   error(1, "out_lro   was not open");
 	// OPEN OUTPUT FILES  
 
-
 	// CALCULATIONS
 	read_ltcp();
 	read_his_cal(); // read both history.vcc and history.sol
@@ -188,7 +187,7 @@ int main(int nArg, char *Arg[]){
 }
 
 void read_ltcp(){ // Reading t0.ltcp ////////////////////
-	ifstream in_ltcp(name_in_ltcp);
+    ifstream in_ltcp(name_in_ltcp);
 	if(! in_ltcp.is_open()) error(1, "in_ltcp was not open"); // check
 
 	int ntotal; in_ltcp >> ntotal; in_ltcp.ignore(); 
@@ -196,7 +195,7 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 	
 	string line2; getline(in_ltcp, line2);
 
-    int states_temp[ntotal];
+    vector <int> states_temp(nx*ny*nz);
 	for(int a=0; a<ntotal; a ++){
 		int state_in, i, j, k, ix, iy, iz, srf;
 		in_ltcp >> state_in >> i >> j >> k;
@@ -225,7 +224,8 @@ void read_ltcp(){ // Reading t0.ltcp ////////////////////
 	for(int a=0; a<ntotal; a ++) states[a]= states_temp[a];
 
     int vcheck= 0;
-	bool is_updated[nx*ny*nz]= {false};
+    vector <bool> is_updated(nx*ny*nz);
+    is_updated= {false};
 	for(int a=0; a<ntotal; a ++){
 		int x= (int) (a/nz)/ny;
 		int y= (int) (a/nz)%ny;
@@ -258,7 +258,8 @@ int cal_thshold(){
             states[ltcp]=Ttype;
         }
         
-        bool is_updated[nx*ny*nz]= {false};
+        vector <bool> is_updated(nx*ny*nz);
+        is_updated= {false};
         for(int a=0; a<nx*ny*nz; a ++){
 		    int x= (int) (a/nz)/ny;
 		    int y= (int) (a/nz)%ny;
@@ -334,7 +335,8 @@ void read_his_cal(){ // Reading history.sol and calculating /////////
 		// UPDATE CLUSTER ID
 		if(is_cltr && 0==timestep%sample_cltr){ // cltr
 			id_cltr.fill(0); cid= 0;
-			bool is_updated[nx*ny*nz]= {false};
+			vector <bool> is_updated(nx*ny*nz);
+            is_updated= {false};
 			for(int a=0; a<i_will.size(); a++){
 				int x1= (int) (i_will.at(a)/nz)/ny;
 				int y1= (int) (i_will.at(a)/nz)%ny;
@@ -367,7 +369,7 @@ void read_his_cal(){ // Reading history.sol and calculating /////////
 	}
 }
 
-void update_cid(int x, int y, int z, bool is_updated[]){ 
+void update_cid(int x, int y, int z, vector <bool> & is_updated){ 
 	int i_ltcp= x*ny*nz + y*nz + z;
 	vector <int> i_ing;  //	the indexs which are being counted
 
@@ -461,8 +463,8 @@ int sum_csize(bool isdef){
 		if(N_in_cltr[j]==1) Ncsize[0] ++;
 	}
 
-	if(N_check1 != ntt) error(2, "number inconsistent for check1", 2, N_check1, ntt);
-	if(N_check2 != ntt) error(2, "number inconsistent for check2", 2, N_check2, ntt);
+//	if(N_check1 != ntt) error(2, "number inconsistent for check1", 2, N_check1, ntt);
+//	if(N_check2 != ntt) error(2, "number inconsistent for check2", 2, N_check2, ntt);
 
 	double Nave, Rave; // average number of atoms and radius of clusters
 	if(0==Ncltr){ Nave= 0; Rave= 0; }
