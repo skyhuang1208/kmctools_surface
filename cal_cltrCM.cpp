@@ -39,9 +39,9 @@ const int v1nbr[8][3]= {{ 1,  0,  0}, { 0,  1,  0}, { 0,  0,  1},
 			{-1,  0,  0}, { 0, -1,  0}, { 0,  0, -1},
 			{ 1,  1,  1}, {-1, -1, -1}	       };
 
-const int nx=  64;
-const int ny=  64;
-const int nz=  64;
+const int nx= 128;
+const int ny= 128;
+const int nz= 128;
 
 const int Ttype= -1;
 // parameters //
@@ -188,7 +188,7 @@ void sum_csize(){
     vector <int> pickedID;
     vector <int> pickedSIZE;
     for(int a=0; a<(cid+1); a++){
-        if(N_in_cltr[a]>100){
+        if(N_in_cltr[a]>50){
             pickedID.push_back(a);
             pickedSIZE.push_back(N_in_cltr[a]);
         }

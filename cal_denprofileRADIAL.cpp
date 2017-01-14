@@ -23,7 +23,8 @@ void error(int nexit, string errinfo, int nnum=0, double num1=0, double num2=0){
 // parameters //
 const double vbra[3][3]= {{-0.5,  0.5,  0.5}, { 0.5, -0.5,  0.5}, { 0.5,  0.5, -0.5}};
 
-double dr= 0.6;
+double r0= 1.5;
+double dr= 0.4;
 double r_trunc= 128.0;
 
 int type_A= -1;
@@ -31,9 +32,9 @@ int type_A= -1;
 const int nx= 64;
 const int ny= 64;
 const int nz= 64;
-const double cx= 32.1761;
-const double cy= 24.173;
-const double cz= -4.50566;
+double cx;
+double cy;
+double cz;
 // parameters //
 
 void read_t0(char name[50], char name_out[50]);
@@ -51,6 +52,9 @@ int main(int nArg, char *Arg[]){
 		cout << "Error: Parameter required: <name_in_ltcp> <name_out>" << endl;
 		exit(1);
 	}
+
+    cout << "Please enter the center of the cluster:" << endl << "cx: ";
+    cin >> cx; cout << "cy: "; cin >> cy; cout << "cz: "; cin >> cz;
 
 	// CALCULATIONS
 	read_t0(Arg[1], Arg[2]);
@@ -109,8 +113,9 @@ void read_t0(char name[50], char name_out[50]){ // Reading t0.ltcp
 
         double dis= cal_dis(i, j, k);
 
-        na[(int) (dis/dr)] ++;
-		if(type_A==state_in) nt[(int) (dis/dr)] ++;
+        int index= (dis<r0) ? 0:((int)((dis-r0)/dr))+1;
+        na[index] ++;
+		if(type_A==state_in) nt[index] ++;
 	}
 	cout << "t0.ltcp file reading completed" << endl;
 	in_t0.close();
@@ -120,7 +125,8 @@ void read_t0(char name[50], char name_out[50]){ // Reading t0.ltcp
     int ncheck= 0;
     for(int a=0; a<na.size(); a++){
         ncheck += na[a];
-        if(na[a] != 0) fprintf(OUT, "%f %f %d %d\n", (a+0.5)*dr, nt[a]*1.0/na[a], nt[a], na[a]);
+        double dis= (a==0) ? dr/2.0:dr+(a-0.5)*dr;
+        if(na[a] != 0) fprintf(OUT, "%f %f %d %d\n", dis, nt[a]*1.0/na[a], nt[a], na[a]);
     }
     if(ncheck != nx*ny*nz) error(2, "number inconsistent", 2, ncheck, nx*ny*nz);
 }

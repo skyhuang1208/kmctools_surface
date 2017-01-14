@@ -4,7 +4,7 @@ import sys
 import os.path
 
 if len(sys.argv) != 2:
-    print("Calculate diffusion coeffs and transport coefficients")
+    print("Input history.dis and output time evolution of r^2 and r1*r2")
     exit("Usage: %s <history.dis>" % sys.argv[0])
 
 # global variables
@@ -32,9 +32,11 @@ def cal_dot(i1, j1, k1, i2, j2, k2):
 
     return x1*x2 + y1*y2 + z1*z2
 
+vcc= []
+sol= [0, 0, 0]
 with open(sys.argv[1], 'r') as IN: # Read his.dis
     l= 0; N= 99999; 
-    dis2D= 0; dis2S= 0; dis2S1= 0; disDOT= 0 
+    dis2D= 0; dis2S= 0; disDOT= 0 
     for line in IN:
         l +=1
         
@@ -50,15 +52,16 @@ with open(sys.argv[1], 'r') as IN: # Read his.dis
             z= int(z)
             if l==3:
                 dis2D += cal_dis2(x, y, z)
-                xD= x; yD= y; zD= z
+                vcc= [x, y, z]
             else:
                 dis2S  += cal_dis2(x, y, z)
-                disDOT += cal_dot(xD, yD, zD, x, y, z)
-                if l==4: dis2S1 += dis2S
+                sol[0] += x; sol[1] += y; sol[2] += z
 
         if (l-2)==N:
+            disSV= cal_dot(sol[0], sol[1], sol[2], vcc[0], vcc[1], vcc[2])
+            disSS= cal_dot(sol[0], sol[1], sol[2], sol[0], sol[1], sol[2])
             if N==1: print(step, float(time1_), float(time2_), dis2D, "END")
-            else:    print(step, float(time1_), float(time2_), dis2D, dis2S/(N-1), disDOT, dis2S1)
+            else:    print(step, float(time1_), float(time2_), dis2D, dis2S/(N-1), disSV, disSS)
             
-            l= 0; dis2D= 0; dis2S= 0; dis2S1= 0; disDOT= 0
+            l= 0; dis2D= 0; dis2S= 0; disDOT= 0; vcc= []; sol= [0, 0, 0]
 
