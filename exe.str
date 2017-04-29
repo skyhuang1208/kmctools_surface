@@ -1,0 +1,16 @@
+./cal_strSCD.py demo/t673/species.out 1e-20 2.4e-7 DEMO 673
+./cal_strSCD.py demo/t773/species.out 1e-20 2.4e-7 DEMO 773
+./cal_strSCD.py demo/t873/species.out 1e-20 2.4e-7 DEMO 873
+./cal_strSCD.py demo/t973/species.out 1e-20 2.4e-7 DEMO 973
+./cal_strSCD.py demo/t1073/species.out 1e-20 2.4e-7 DEMO 1073
+./cal_strSCD.py hfir/t673/species.out 1e-20 2.4e-7 HFIR 673
+./cal_strSCD.py hfir/t773/species.out 1e-20 2.4e-7 HFIR 773
+./cal_strSCD.py hfir/t873/species.out 1e-20 2.4e-7 HFIR 873
+./cal_strSCD.py hfir/t973/species.out 1e-20 2.4e-7 HFIR 973
+./cal_strSCD.py hfir/t1073/species.out 1e-20 2.4e-7 HFIR 1073
+./cal_strSCD.py joyo/t673/species.out 1e-20 2.4e-7 JOYO 673
+./cal_strSCD.py joyo/t773/species.out 1e-20 2.4e-7 JOYO 773
+./cal_strSCD.py joyo/t873/species.out 1e-20 2.4e-7 JOYO 873
+./cal_strSCD.py joyo/t973/species.out 1e-20 2.4e-7 JOYO 973
+./cal_strSCD.py joyo/t1073/species.out 1e-20 2.4e-7 JOYO 1073
+

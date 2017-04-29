@@ -1,0 +1,34 @@
+cd demo/
+mkdir cals/
+cd cals
+cp ../../cal_cltrSCD.py ./
+./cal_cltrSCD.py ../t673/species.out 1e-20 2.4e-07 demo 673
+./cal_cltrSCD.py ../t773/species.out 1e-20 2.4e-07 demo 773
+./cal_cltrSCD.py ../t873/species.out 1e-20 2.4e-07 demo 873
+./cal_cltrSCD.py ../t973/species.out 1e-20 2.4e-07 demo 973
+./cal_cltrSCD.py ../t1073/species.out 1e-20 2.4e-07 demo 1073
+cd ../../
+
+cd hfir/
+mkdir cals/
+cd cals
+cp ../../cal_cltrSCD.py ./
+./cal_cltrSCD.py ../t673/species.out 1e-20 2.4e-07 hfir 673
+./cal_cltrSCD.py ../t773/species.out 1e-20 2.4e-07 hfir 773
+./cal_cltrSCD.py ../t873/species.out 1e-20 2.4e-07 hfir 873
+./cal_cltrSCD.py ../t973/species.out 1e-20 2.4e-07 hfir 973
+./cal_cltrSCD.py ../t1073/species.out 1e-20 2.4e-07 hfir 1073
+cd ../../
+
+cd joyo/
+mkdir cals/
+cd cals
+cp ../../cal_cltrSCD.py ./
+./cal_cltrSCD.py ../t673/species.out 1e-20 2.4e-07 joyo 673
+./cal_cltrSCD.py ../t773/species.out 1e-20 2.4e-07 joyo 773
+./cal_cltrSCD.py ../t873/species.out 1e-20 2.4e-07 joyo 873
+./cal_cltrSCD.py ../t973/species.out 1e-20 2.4e-07 joyo 973
+./cal_cltrSCD.py ../t1073/species.out 1e-20 2.4e-07 joyo 1073
+cd ../../
+
+
